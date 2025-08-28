@@ -1,5 +1,5 @@
+import { DashboardHeader } from '@/components/dashboard-header'
 import { Button } from '@/components/ui/button'
-import { DashboardHeader } from '@/components/ui/dashboard-header'
 import { PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 
