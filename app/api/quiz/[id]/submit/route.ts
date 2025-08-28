@@ -40,6 +40,21 @@ export async function POST(
       .from(questions)
       .where(eq(questions.quizId, id))
 
+    // Check if user has exceeded max attempts
+    const existingAttempts = await db
+      .select()
+      .from(quizAttempts)
+      .where(
+        and(
+          eq(quizAttempts.quizId, id),
+          eq(quizAttempts.userId, session.user.id)
+        )
+      )
+
+    if (quiz.maxAttempts && existingAttempts.length >= quiz.maxAttempts) {
+      return NextResponse.json({ error: 'Maximum attempts exceeded' }, { status: 403 })
+    }
+
     // Calculate score
     let correctAnswers = 0
     const totalQuestions = quizQuestions.length
@@ -55,31 +70,6 @@ export async function POST(
         completedAt: new Date()
       })
       .returning({ id: quizAttempts.id })
-
-    // Check if user has exceeded max attempts
-    const existingAttempts = await db
-      .select()
-      .from(quizAttempts)
-      .where(
-        and(
-          eq(quizAttempts.quizId, id),
-          eq(quizAttempts.userId, session.user.id)
-        )
-      )
-
-    if (existingAttempts.length >= quiz.maxAttempts) {
-      return NextResponse.json({ error: 'Maximum attempts exceeded' }, { status: 403 })
-    }
-
-    // Create quiz attempt
-    const [attempt] = await db
-      .insert(quizAttempts)
-      .values({
-        quizId: id,
-        userId: session.user.id,
-        startedAt: new Date(),
-      })
-      .returning()
 
     // Grade the quiz
     let totalPoints = 0
