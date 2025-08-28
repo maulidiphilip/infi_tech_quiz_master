@@ -8,10 +8,11 @@ import { questions, quizAttempts, quizzes, userAnswers } from '@/src/schema'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
+    const { id } = await params
     
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -19,29 +20,41 @@ export async function POST(
 
     const body = await request.json()
     const validatedData = submitQuizSchema.parse({
-      quizId: params.id,
-      answers: body.answers,
+      quizId: id,
+      answers: body.answers
     })
 
-    // Get quiz details
+    // Fetch quiz details
     const [quiz] = await db
       .select()
       .from(quizzes)
-      .where(eq(quizzes.id, params.id))
+      .where(eq(quizzes.id, id))
 
     if (!quiz || !quiz.isActive) {
-      return NextResponse.json({ error: 'Quiz not available' }, { status: 404 })
+      return NextResponse.json({ error: 'Quiz not found or inactive' }, { status: 404 })
     }
 
-    // Get all questions for this quiz
+    // Fetch questions for grading
     const quizQuestions = await db
       .select()
       .from(questions)
-      .where(eq(questions.quizId, params.id))
+      .where(eq(questions.quizId, id))
 
-    if (quizQuestions.length === 0) {
-      return NextResponse.json({ error: 'No questions found for this quiz' }, { status: 404 })
-    }
+    // Calculate score
+    let correctAnswers = 0
+    const totalQuestions = quizQuestions.length
+    
+    // Create quiz attempt record
+    const [attempt] = await db
+      .insert(quizAttempts)
+      .values({
+        quizId: id,
+        userId: session.user.id,
+        score: 0, // Will update after calculation
+        passed: false, // Will update after calculation
+        completedAt: new Date()
+      })
+      .returning({ id: quizAttempts.id })
 
     // Check if user has exceeded max attempts
     const existingAttempts = await db
@@ -49,7 +62,7 @@ export async function POST(
       .from(quizAttempts)
       .where(
         and(
-          eq(quizAttempts.quizId, params.id),
+          eq(quizAttempts.quizId, id),
           eq(quizAttempts.userId, session.user.id)
         )
       )
@@ -62,7 +75,7 @@ export async function POST(
     const [attempt] = await db
       .insert(quizAttempts)
       .values({
-        quizId: params.id,
+        quizId: id,
         userId: session.user.id,
         startedAt: new Date(),
       })

@@ -76,6 +76,11 @@ export function QuizCard({ quiz }: QuizCardProps) {
                 Edit
               </Button>
             </Link>
+            <Link href={`/admin/quiz/${quiz.id}/results`} className="flex-1">
+              <Button variant="secondary" size="sm" className="w-full">
+                Results
+              </Button>
+            </Link>
             <Button variant="destructive" size="sm">
               <Trash2 className="h-4 w-4" />
             </Button>

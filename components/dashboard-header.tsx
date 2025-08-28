@@ -2,8 +2,9 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { LogOut, User, Moon, Sun } from 'lucide-react'
+import { MoonIcon, SunIcon, LogOut, History } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import Link from 'next/link'
 
 export function DashboardHeader() {
   const { data: session } = useSession()
@@ -13,37 +14,46 @@ export function DashboardHeader() {
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-4">
-          <h2 className="text-xl font-semibold">Quiz Management System</h2>
-          {session?.user?.role === 'ADMIN' && (
-            <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-              Admin
+          <Link href="/" className="text-xl font-semibold hover:text-primary">
+            Quiz Management System
+          </Link>
+          {session?.user && (
+            <span className="text-sm text-muted-foreground">
+              Welcome, {session.user.name || session.user.email}
             </span>
           )}
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          {session?.user && (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/student/history">
+                  <History className="h-4 w-4 mr-2" />
+                  History
+                </Link>
+              </Button>
+            </>
+          )}
+          
           <Button
             variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          >
-            <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-          </Button>
-          
-          <div className="flex items-center space-x-2">
-            <User className="h-4 w-4" />
-            <span className="text-sm font-medium">{session?.user?.name || session?.user?.email}</span>
-          </div>
-          
-          <Button
-            variant="outline"
             size="sm"
-            onClick={() => signOut()}
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
           >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
+            {theme === 'light' ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
           </Button>
+          
+          {session?.user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => signOut()}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          )}
         </div>
       </div>
     </header>
