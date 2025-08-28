@@ -29,16 +29,6 @@ export default function CreateQuizPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-
-  // Quiz form state
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [timeLimit, setTimeLimit] = useState<number | undefined>(undefined)
-  const [passingScore, setPassingScore] = useState(70)
-  const [maxAttempts, setMaxAttempts] = useState(3)
-  const [isActive, setIsActive] = useState(true)
-
-  // Questions state
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestion, setCurrentQuestion] = useState<Partial<Question>>({
     question: '',
@@ -47,6 +37,14 @@ export default function CreateQuizPage() {
     correctAnswer: '',
     points: 1,
   })
+
+  // Quiz form state
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [timeLimit, setTimeLimit] = useState<number | undefined>(undefined)
+  const [passingScore, setPassingScore] = useState(70)
+  const [maxAttempts, setMaxAttempts] = useState(3)
+  const [isActive, setIsActive] = useState(true)
 
   const addQuestion = () => {
     try {
@@ -108,12 +106,20 @@ export default function CreateQuizPage() {
       }
 
       // Here you would typically make an API call to create the quiz
-      // For now, we'll simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      router.push('/')
-    } catch (err: any) {
-      setError(err.message || 'Failed to create quiz')
+      const response = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quizData)
+      })
+
+      if (response.ok) {
+        router.push('/')
+      } else {
+        const error = await response.json()
+        setError(error instanceof Error ? error.message : 'An error occurred')
+      }
+    } catch (error: unknown) {
+      setError('Failed to create quiz')
     } finally {
       setIsLoading(false)
     }

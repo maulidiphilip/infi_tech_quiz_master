@@ -8,10 +8,10 @@ import { createQuizSchema } from "@/validations/quiz";
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-
+    const session = await getServerSession(authOptions)
+    
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const allQuizzes = await db
@@ -25,9 +25,7 @@ export async function GET() {
         createdAt: quizzes.createdAt,
       })
       .from(quizzes)
-      .where(
-        session.user.role === "ADMIN" ? undefined : eq(quizzes.isActive, true)
-      );
+      .where(session.user.role === 'ADMIN' ? undefined : eq(quizzes.isActive, true))
 
     // Get question counts for each quiz
     const quizzesWithCounts = await Promise.all(
@@ -35,36 +33,33 @@ export async function GET() {
         const [questionCount] = await db
           .select({ count: questions.id })
           .from(questions)
-          .where(eq(questions.quizId, quiz.id));
+          .where(eq(questions.quizId, quiz.id))
 
         return {
           ...quiz,
           questionsCount: questionCount?.count || 0,
-          attemptsCount: 0,
-        };
+          attemptsCount: 0, // TODO: Implement attempts count
+        }
       })
-    );
+    )
 
-    return NextResponse.json(quizzesWithCounts);
+    return NextResponse.json(quizzesWithCounts)
   } catch (error) {
-    console.error("Error fetching quizzes:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error('Error fetching quizzes:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await getServerSession(authOptions)
+    
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json();
-    const validatedData = createQuizSchema.parse(body);
+    const body = await request.json()
+    const validatedData = createQuizSchema.parse(body)
 
     const [newQuiz] = await db
       .insert(quizzes)
@@ -72,7 +67,7 @@ export async function POST(request: NextRequest) {
         ...validatedData,
         createdById: session.user.id,
       })
-      .returning();
+      .returning()
 
     // Insert questions if provided
     if (body.questions && body.questions.length > 0) {
@@ -84,25 +79,19 @@ export async function POST(request: NextRequest) {
         correctAnswer: q.correctAnswer,
         points: q.points,
         order: index + 1,
-      }));
+      }))
 
-      await db.insert(questions).values(questionsData);
+      await db.insert(questions).values(questionsData)
     }
 
-    return NextResponse.json(newQuiz, { status: 201 });
-  } catch (error: any) {
-    console.error("Error creating quiz:", error);
-
-    if (error.name === "ZodError") {
-      return NextResponse.json(
-        { error: "Validation error", details: error.errors },
-        { status: 400 }
-      );
+    return NextResponse.json(newQuiz, { status: 201 })
+  } catch (error: unknown) {
+    console.error('Error creating quiz:', error)
+    
+    if (error instanceof Error && error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Validation error', details: (error as any).errors }, { status: 400 })
     }
-
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

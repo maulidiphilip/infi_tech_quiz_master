@@ -56,8 +56,6 @@ export async function POST(
     }
 
     // Calculate score
-    let correctAnswers = 0
-    const totalQuestions = quizQuestions.length
     
     // Create quiz attempt record
     const [attempt] = await db
@@ -122,13 +120,14 @@ export async function POST(
       passed,
       passingScore: quiz.passingScore,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error submitting quiz:', error)
     
-    if (error.name === 'ZodError') {
-      return NextResponse.json({ error: 'Validation error', details: error.errors }, { status: 400 })
+    if (error instanceof Error && error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Validation error', details: (error as any).errors }, { status: 400 })
     }
     
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+

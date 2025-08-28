@@ -138,7 +138,7 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
                                 ? JSON.parse(question.options) 
                                 : question.options;
                               return Array.isArray(options) ? options.join(', ') : 'Invalid options format';
-                            } catch (e) {
+                            } catch {
                               return String(question.options || '');
                             }
                           })() as string}

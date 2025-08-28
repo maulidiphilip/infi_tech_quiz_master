@@ -46,11 +46,11 @@ export default async function HomePage() {
         return {
           ...quiz,
           questionsCount: questionCount?.count || 0,
-          attemptsCount: 0, // TODO: Implement attempts count
+          attemptsCount: 0, // TODO: Implement attempts count, later 
         }
       })
     )
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching quizzes:', error)
     allQuizzes = []
   }

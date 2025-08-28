@@ -7,7 +7,6 @@ import { db } from "@/src/db"
 import { users } from "@/src/schema"
 
 export const authOptions: NextAuthOptions = {
-  adapter: DrizzleAdapter(db),
   providers: [
     CredentialsProvider({
       name: 'Credentials',
@@ -15,7 +14,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials: any) {
+      async authorize(credentials: Record<string, string> | undefined) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Email and password are required')
         }
@@ -58,7 +57,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token
     },
-    async session({ session, token }: any) {
+    async session({ session, token }: { session: any; token: any }) {
       if (session?.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
