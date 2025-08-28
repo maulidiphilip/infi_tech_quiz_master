@@ -6,7 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:init": "node scripts/init-db.js",
+    "create-users": "node scripts/create-demo-users.js",
+    "create-quizzes": "node scripts/create-sample-quizzes.js"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.10.0",

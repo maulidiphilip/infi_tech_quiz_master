@@ -1,10 +1,59 @@
+import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { DashboardHeader } from '@/components/dashboard-header'
+import { QuizCard } from '@/components/quiz-card'
 import { Button } from '@/components/ui/button'
 import { PlusCircle } from 'lucide-react'
 import Link from 'next/link'
+import { eq, count } from 'drizzle-orm'
+import { db } from '@/src/db'
+import { questions, quizzes } from '@/src/schema'
 
-export default function HomePage() {
-  const isAdmin = true // temporary placeholder until auth is added
+export default async function HomePage() {
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    redirect('/auth/signin')
+  }
+
+  const isAdmin = session.user?.role === 'ADMIN'
+
+  // Fetch quizzes from database
+  let allQuizzes: any[] = []
+  try {
+    const quizData = await db
+      .select({
+        id: quizzes.id,
+        title: quizzes.title,
+        description: quizzes.description,
+        timeLimit: quizzes.timeLimit,
+        passingScore: quizzes.passingScore,
+        isActive: quizzes.isActive,
+        createdAt: quizzes.createdAt,
+      })
+      .from(quizzes)
+      .where(isAdmin ? undefined : eq(quizzes.isActive, true))
+
+    // Get question counts for each quiz
+    allQuizzes = await Promise.all(
+      quizData.map(async (quiz) => {
+        const [questionCount] = await db
+          .select({ count: count() })
+          .from(questions)
+          .where(eq(questions.quizId, quiz.id))
+
+        return {
+          ...quiz,
+          questionsCount: questionCount?.count || 0,
+          attemptsCount: 0, // TODO: Implement attempts count
+        }
+      })
+    )
+  } catch (error) {
+    console.error('Error fetching quizzes:', error)
+    allQuizzes = []
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -32,13 +81,24 @@ export default function HomePage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Quiz cards will be populated here */}
-          <div className="col-span-full text-center py-12">
-            <p className="text-muted-foreground">
-              {isAdmin ? 'No quizzes created yet. Create your first quiz!' : 'No quizzes available at the moment.'}
-            </p>
-          </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {allQuizzes.length > 0 ? (
+            allQuizzes.map((quiz) => (
+              <QuizCard
+                key={quiz.id}
+                quiz={quiz}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground text-lg">
+                {isAdmin 
+                  ? 'No quizzes created yet. Create your first quiz to get started!'
+                  : 'No quizzes available at the moment.'
+                }
+              </p>
+            </div>
+          )}
         </div>
       </main>
     </div>
