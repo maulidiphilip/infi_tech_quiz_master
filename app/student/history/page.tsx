@@ -56,13 +56,15 @@ export default async function StudentHistoryPage() {
                       <CardTitle className="text-lg">{attempt.quizTitle}</CardTitle>
                       <CardDescription className="flex items-center mt-2">
                         <Calendar className="h-4 w-4 mr-1" />
-                        {new Date(attempt.completedAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {attempt.completedAt
+                          ? new Date(attempt.completedAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : 'Not completed'}
                       </CardDescription>
                     </div>
                     <Badge variant={attempt.passed ? 'default' : 'destructive'}>
@@ -90,7 +92,7 @@ export default async function StudentHistoryPage() {
                       <div className={`text-lg font-semibold ${
                         attempt.passed ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {attempt.score >= attempt.quizPassingScore ? 'Above' : 'Below'} Passing
+                        {(attempt.score ?? 0) >= attempt.quizPassingScore ? 'Above' : 'Below'} Passing
                       </div>
                     </div>
                   </div>
@@ -104,7 +106,7 @@ export default async function StudentHistoryPage() {
               <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">No Quiz Attempts Yet</h3>
               <p className="text-muted-foreground">
-                You haven't attempted any quizzes yet. Start by taking your first quiz!
+                You haven&#39;t attempted any quizzes yet. Start by taking your first quiz!
               </p>
             </CardContent>
           </Card>

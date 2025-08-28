@@ -14,6 +14,7 @@ import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { db } from '@/src/db'
 import { questions, quizzes } from '@/src/schema'
+import type { ReactNode } from 'react'
 
 interface EditQuizPageProps {
   params: {
@@ -21,9 +22,38 @@ interface EditQuizPageProps {
   }
 }
 
+// ✅ helper to render question options safely
+function renderOptions(options: unknown): ReactNode {
+  try {
+    if (!options || options === 'null') return null
+
+    const parsed = typeof options === 'string' ? JSON.parse(options) : options
+
+    if (Array.isArray(parsed)) {
+      return (
+        <div className="text-sm text-muted-foreground">
+          Options: {parsed.join(', ')}
+        </div>
+      )
+    }
+
+    return (
+      <div className="text-sm text-muted-foreground">
+        Options: Invalid format
+      </div>
+    )
+  } catch {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Options: {String(options || '')}
+      </div>
+    )
+  }
+}
+
 export default async function EditQuizPage({ params }: EditQuizPageProps) {
   const session = await getServerSession(authOptions)
-  const { id } = await params
+  const { id } = params
 
   if (!session || session.user?.role !== 'ADMIN') {
     redirect('/auth/signin')
@@ -61,6 +91,7 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
         </div>
 
         <div className="space-y-6">
+          {/* Quiz Details */}
           <Card>
             <CardHeader>
               <CardTitle>Quiz Details</CardTitle>
@@ -76,44 +107,30 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
                   <Label htmlFor="active">Active</Label>
                 </div>
               </div>
-              
+
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" defaultValue={quiz.description || ''} />
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="timeLimit">Time Limit (minutes)</Label>
-                  <Input 
-                    id="timeLimit" 
-                    type="number" 
-                    defaultValue={quiz.timeLimit || ''} 
-                  />
+                  <Input id="timeLimit" type="number" defaultValue={quiz.timeLimit || ''} />
                 </div>
                 <div>
                   <Label htmlFor="passingScore">Passing Score (%)</Label>
-                  <Input 
-                    id="passingScore" 
-                    type="number" 
-                    min="0" 
-                    max="100" 
-                    defaultValue={quiz.passingScore} 
-                  />
+                  <Input id="passingScore" type="number" min="0" max="100" defaultValue={quiz.passingScore} />
                 </div>
                 <div>
                   <Label htmlFor="maxAttempts">Max Attempts</Label>
-                  <Input 
-                    id="maxAttempts" 
-                    type="number" 
-                    min="1" 
-                    defaultValue={quiz.maxAttempts || ''} 
-                  />
+                  <Input id="maxAttempts" type="number" min="1" defaultValue={quiz.maxAttempts || ''} />
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Questions */}
           <Card>
             <CardHeader>
               <CardTitle>Questions ({quizQuestions.length})</CardTitle>
@@ -129,21 +146,10 @@ export default async function EditQuizPage({ params }: EditQuizPageProps) {
                         </span>
                       </div>
                       <p className="font-medium mb-2">{String(question.question)}</p>
-                      {question.options && question.options !== 'null' && (
-                        <div className="text-sm text-muted-foreground">
-                          Options: {(() => {
-                            try {
-                              if (!question.options) return '';
-                              const options = typeof question.options === 'string' 
-                                ? JSON.parse(question.options) 
-                                : question.options;
-                              return Array.isArray(options) ? options.join(', ') : 'Invalid options format';
-                            } catch {
-                              return String(question.options || '');
-                            }
-                          })() as string}
-                        </div>
-                      )}
+
+                      {/* ✅ use helper here */}
+                      {renderOptions(question.options)}
+
                       <div className="text-sm text-green-600 mt-1">
                         Correct Answer: {String(question.correctAnswer || '')}
                       </div>
