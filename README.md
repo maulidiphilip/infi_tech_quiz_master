@@ -79,11 +79,15 @@ All core functionalities have been implemented and tested:
 
 4. **Database Setup**
    ```bash
-   # Generate database migrations
-   npm run db:generate
+   # You can generate migrations using drizzle-kit generate command 
+   npx drizzle-kit generate
    
    # Apply migrations
-   npm run db:migrate
+   npx drizzle-kit migrate
+
+   # Alternatively, you can push changes directly to the database using
+   npx drizzle-kit push
+
    ```
 
 5. **Start Development Server**
