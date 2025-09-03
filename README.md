@@ -8,12 +8,11 @@ All core functionalities have been implemented and tested:
 
 ### **Admin Features**
 - **Quiz Creation**: Create quizzes with multiple question types (Multiple Choice, True/False, Short Answer)
-- **Quiz Management**: Edit, delete, activate/deactivate quizzes
-- **Question Management**: Add questions with points, correct answers, and ordering
-- **Results Analytics**: View detailed quiz results and student performance
-- **Dashboard**: Comprehensive admin dashboard with quiz overview
-- **Quiz Management**: Edit, activate/deactivate, and delete quizzes
+- **Quiz Management**: Full CRUD operations - create, read, update, delete quizzes
 - **Question Management**: Add, edit, and reorder questions with customizable point values
+- **Results Analytics**: View detailed quiz results and student performance
+- **User Management**: Promote students to admin or demote admins to students
+- **Dashboard**: Comprehensive admin dashboard with quiz overview
 - **Time Limits**: Set optional time limits for quizzes
 - **Passing Scores**: Configure minimum passing percentages
 - **Attempt Limits**: Control maximum number of attempts per student
@@ -27,6 +26,8 @@ All core functionalities have been implemented and tested:
 
 ### System Features
 - **Authentication**: Secure login system with role-based access (Admin/Student)
+- **User Registration**: Secure registration process (all new users default to Student role)
+- **Role Management**: Admin-controlled user promotion/demotion system
 - **Database**: PostgreSQL with Drizzle ORM for type-safe database operations
 - **Validation**: Comprehensive input validation using Zod
 - **Dark Mode**: Built-in theme switching
@@ -99,23 +100,26 @@ All core functionalities have been implemented and tested:
 
 ```
 quiz-management-system/
-├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── admin/             # Admin-only pages
-│   │   ├── api/               # API routes
-│   │   ├── auth/              # Authentication pages
-│   │   └── quiz/              # Student quiz pages
-│   ├── components/            # Reusable UI components
-│   │   └── ui/               # shadcn/ui components
-│   ├── db/                   # Database configuration
-│   │   ├── connection.ts     # Database connection
-│   │   └── schema.ts         # Drizzle schema definitions
-│   ├── lib/                  # Utility functions
-│   ├── styles/               # Global styles
-│   ├── types/                # TypeScript type definitions
-│   └── validations/          # Zod validation schemas
-├── drizzle/                  # Database migrations
-├── public/                   # Static assets
+├── app/                      # Next.js App Router pages
+│   ├── admin/               # Admin-only pages
+│   │   ├── quiz/           # Quiz management
+│   │   └── users/          # User role management
+│   ├── api/                # API routes
+│   │   ├── admin/          # Admin-only endpoints
+│   │   ├── auth/           # Authentication endpoints
+│   │   └── quiz/           # Quiz endpoints
+│   ├── auth/               # Authentication pages
+│   └── quiz/               # Student quiz pages
+├── components/             # Reusable UI components
+│   └── ui/                # shadcn/ui components
+├── src/                   # Core application files
+│   ├── db.ts             # Database connection
+│   └── schema.ts         # Drizzle schema definitions
+├── lib/                   # Utility functions
+├── types/                 # TypeScript type definitions
+├── validations/           # Zod validation schemas
+├── migrations/            # Database migrations
+├── public/                # Static assets
 └── package.json
 ```
 
@@ -128,24 +132,34 @@ quiz-management-system/
 4. Set quiz parameters (time limits, passing scores, max attempts)
 5. Activate quizzes for student access
 6. Monitor student performance
+7. Manage user roles (promote students to admin)
+8. Edit or delete existing quizzes
 
 ### Student Workflow
-1. Sign in with student credentials
-2. View available quizzes on dashboard
-3. Take quizzes with real-time timer
-4. Submit answers and receive instant results
-5. View performance history
+1. Register for a new account (automatically assigned Student role)
+2. Sign in with student credentials
+3. View available quizzes on dashboard
+4. Take quizzes with real-time timer
+5. Submit answers and receive instant results
+6. View performance history
 
 ## 🔧 API Endpoints
 
 ### Authentication
 - `POST /api/auth/[...nextauth]` - NextAuth.js authentication
+- `POST /api/auth/register` - User registration (defaults to Student role)
 
 ### Quiz Management
 - `GET /api/quiz` - List all quizzes
 - `POST /api/quiz` - Create new quiz (Admin only)
 - `GET /api/quiz/[id]` - Get quiz details
+- `PUT /api/quiz/[id]` - Update quiz (Admin only)
+- `DELETE /api/quiz/[id]` - Delete quiz (Admin only)
 - `POST /api/quiz/[id]/submit` - Submit quiz answers
+
+### User Management
+- `GET /api/admin/users` - List all users (Admin only)
+- `PUT /api/admin/users/[id]` - Update user role (Admin only)
 
 ## 🗄 Database Schema
 
@@ -166,6 +180,9 @@ quiz-management-system/
 
 - **Authentication**: Secure session management with NextAuth.js
 - **Authorization**: Role-based access control (Admin/Student)
+- **Secure Registration**: All new users default to Student role (no public admin registration)
+- **Admin-Controlled Promotions**: Only existing admins can promote users to admin
+- **Self-Protection**: Admins cannot demote themselves accidentally
 - **Input Validation**: Comprehensive validation using Zod
 - **SQL Injection Protection**: Type-safe queries with Drizzle ORM
 - **Environment Variables**: Secure configuration management
