@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
+import Link from 'next/link'
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
@@ -92,11 +93,13 @@ export default function SignInPage() {
             </Button>
           </form>
           
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Demo Credentials:</p>
-            <p>Admin: admin@example.com / admin123</p>
-            <p>Student: student@example.com / student123</p>
+          <div className="mt-6 text-center text-sm">
+            <span className="text-muted-foreground">Don't have an account? </span>
+            <Link href="/auth/register" className="text-primary hover:underline">
+              Sign up
+            </Link>
           </div>
+  
         </CardContent>
       </Card>
     </div>

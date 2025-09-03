@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { MoonIcon, SunIcon, LogOut, History } from 'lucide-react'
+import { MoonIcon, SunIcon, LogOut, History, Users } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
 
@@ -27,6 +27,14 @@ export function DashboardHeader() {
         <div className="flex items-center space-x-2">
           {session?.user && (
             <>
+              {session.user.role === 'ADMIN' && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/admin/users">
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Users
+                  </Link>
+                </Button>
+              )}
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/student/history">
                   <History className="h-4 w-4 mr-2" />
