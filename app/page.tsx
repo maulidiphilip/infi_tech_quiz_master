@@ -8,7 +8,7 @@ import { PlusCircle } from 'lucide-react'
 import Link from 'next/link'
 import { eq, count } from 'drizzle-orm'
 import { db } from '@/src/db'
-import { questions, quizzes } from '@/src/schema'
+import { questions, quizzes, quizAttempts } from '@/src/schema'
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions)
@@ -35,7 +35,7 @@ export default async function HomePage() {
       .from(quizzes)
       .where(isAdmin ? undefined : eq(quizzes.isActive, true))
 
-    // Get question counts for each quiz
+    // Get question counts and attempts counts for each quiz
     allQuizzes = await Promise.all(
       quizData.map(async (quiz) => {
         const [questionCount] = await db
@@ -43,10 +43,15 @@ export default async function HomePage() {
           .from(questions)
           .where(eq(questions.quizId, quiz.id))
 
+        const [attemptCount] = await db
+          .select({ count: count() })
+          .from(quizAttempts)
+          .where(eq(quizAttempts.quizId, quiz.id))
+
         return {
           ...quiz,
           questionsCount: questionCount?.count || 0,
-          attemptsCount: 0, // TODO: Implement attempts count, later 
+          attemptsCount: attemptCount?.count || 0,
         }
       })
     )
